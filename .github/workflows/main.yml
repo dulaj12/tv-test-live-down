@@ -9,6 +9,8 @@ on:
 jobs:
   download:
     runs-on: ubuntu-latest
+    # පැය 6ක් දක්වා රන් වීමට ඉඩ ලබා දෙයි
+    timeout-minutes: 360 
     steps:
       - name: Free Disk Space
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
@@ -20,21 +22,22 @@ jobs:
 
       - name: Download Video
         run: |
-          # මෙතනදී වීඩියෝ එක musical_show_full.mp4 නමින්ම force කරනවා
+          # --continue සහ --retry මගින් බාධා වුවහොත් නැවත උත්සාහ කරයි
           yt-dlp -f "bestvideo[height<=480]+bestaudio/best[height<=480]" \
           --no-check-certificate \
           --live-from-start \
-          --wait-for-video 10 \
+          --wait-for-video 30 \
+          --continue \
+          --retries infinite \
+          --fragment-retries infinite \
           --merge-output-format mp4 \
           -o "musical_show_full.mp4" \
           "${{ github.event.inputs.stream_url }}"
 
-      - name: Check file existence
-        run: ls -R
-
       - name: Upload Artifact
+        if: always() # Error එකක් ආවත් තිබුණු ටික අප්ලෝඩ් කරයි
         uses: actions/upload-artifact@v4
         with:
           name: Full-Musical-Video
-          path: "*.mp4"  # ෆෝල්ඩර් එකේ තියෙන ඕනෑම .mp4 ෆයිල් එකක් අප්ලෝඩ් කරයි
+          path: "*.mp4"
           retention-days: 1
